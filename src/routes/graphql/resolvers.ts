@@ -13,6 +13,8 @@ import {
   CreateProfileInput,
   ChangeProfileInput,
 } from './types.js';
+import { shouldIncludeSubscriptions, primeUsersInCache } from './utils.js';
+import { parseResolveInfo } from 'graphql-parse-resolve-info';
 
 // Struktura RootQueryType - resolvers będą dodane w następnym etapie
 export const RootQueryType = new GraphQLObjectType({
@@ -37,8 +39,42 @@ export const RootQueryType = new GraphQLObjectType({
     },
     users: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(User))),
-      resolve: async (parent, args, context) => {
-        return context.prisma.user.findMany();
+      resolve: async (parent, args, context, info) => {
+        const parsedInfo = parseResolveInfo(info) as any;
+        const userFields = parsedInfo?.fieldsByTypeName?.User || {};
+        
+        const includeOptions: any = {
+          profile: {
+            include: {
+              memberType: true,
+            },
+          },
+          posts: true,
+        };
+        
+        if (userFields.userSubscribedTo) {
+          includeOptions.userSubscribedTo = true;
+        }
+        
+        if (userFields.subscribedToUser) {
+          includeOptions.subscribedToUser = true;
+        }
+        
+        const users = await context.prisma.user.findMany({
+          include: includeOptions,
+        });
+        
+        // Transform subscription data
+        const transformedUsers = users.map(user => ({
+          ...user,
+          userSubscribedTo: user.userSubscribedTo || [],
+          subscribedToUser: user.subscribedToUser || [],
+        }));
+        
+        // Prime cache with loaded data
+        await primeUsersInCache(transformedUsers, context.loaders);
+        
+        return transformedUsers;
       },
     },
     user: {
