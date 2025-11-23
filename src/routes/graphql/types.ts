@@ -47,7 +47,11 @@ export const Profile = new GraphQLObjectType({
     yearOfBirth: { type: new GraphQLNonNull(GraphQLInt) },
     memberType: {
       type: new GraphQLNonNull(MemberType),
-      // Resolver będzie dodany w następnym etapie
+      resolve: async (parent, args, context) => {
+        return context.prisma.memberType.findUnique({
+          where: { id: parent.memberTypeId },
+        });
+      },
     },
   }),
 });
@@ -60,19 +64,39 @@ export const User = new GraphQLObjectType({
     balance: { type: new GraphQLNonNull(GraphQLFloat) },
     profile: {
       type: Profile,
-      // Resolver będzie dodany w następnym etapie
+      resolve: async (parent, args, context) => {
+        return context.prisma.profile.findUnique({
+          where: { userId: parent.id },
+        });
+      },
     },
     posts: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Post))),
-      // Resolver będzie dodany w następnym etapie
+      resolve: async (parent, args, context) => {
+        return context.prisma.post.findMany({
+          where: { authorId: parent.id },
+        });
+      },
     },
     userSubscribedTo: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(User))),
-      // Resolver będzie dodany w następnym etapie
+      resolve: async (parent, args, context) => {
+        const subscriptions = await context.prisma.subscribersOnAuthors.findMany({
+          where: { subscriberId: parent.id },
+          include: { author: true },
+        });
+        return subscriptions.map(sub => sub.author);
+      },
     },
     subscribedToUser: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(User))),
-      // Resolver będzie dodany w następnym etapie
+      resolve: async (parent, args, context) => {
+        const subscribers = await context.prisma.subscribersOnAuthors.findMany({
+          where: { authorId: parent.id },
+          include: { subscriber: true },
+        });
+        return subscribers.map(sub => sub.subscriber);
+      },
     },
   }),
 });

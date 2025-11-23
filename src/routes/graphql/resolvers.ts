@@ -20,47 +20,71 @@ export const RootQueryType = new GraphQLObjectType({
   fields: {
     memberTypes: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(MemberType))),
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.memberType.findMany();
+      },
     },
     memberType: {
       type: MemberType,
       args: {
         id: { type: new GraphQLNonNull(MemberTypeIdEnum) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.memberType.findUnique({
+          where: { id: args.id },
+        });
+      },
     },
     users: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(User))),
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.user.findMany();
+      },
     },
     user: {
       type: User,
       args: {
         id: { type: new GraphQLNonNull(UUIDType) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.user.findUnique({
+          where: { id: args.id },
+        });
+      },
     },
     posts: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Post))),
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.post.findMany();
+      },
     },
     post: {
       type: Post,
       args: {
         id: { type: new GraphQLNonNull(UUIDType) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.post.findUnique({
+          where: { id: args.id },
+        });
+      },
     },
     profiles: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Profile))),
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.profile.findMany();
+      },
     },
     profile: {
       type: Profile,
       args: {
         id: { type: new GraphQLNonNull(UUIDType) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.profile.findUnique({
+          where: { id: args.id },
+        });
+      },
     },
   },
 });
@@ -74,21 +98,33 @@ export const Mutations = new GraphQLObjectType({
       args: {
         dto: { type: new GraphQLNonNull(CreateUserInput) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.user.create({
+          data: args.dto,
+        });
+      },
     },
     createProfile: {
       type: new GraphQLNonNull(Profile),
       args: {
         dto: { type: new GraphQLNonNull(CreateProfileInput) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.profile.create({
+          data: args.dto,
+        });
+      },
     },
     createPost: {
       type: new GraphQLNonNull(Post),
       args: {
         dto: { type: new GraphQLNonNull(CreatePostInput) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.post.create({
+          data: args.dto,
+        });
+      },
     },
     changePost: {
       type: new GraphQLNonNull(Post),
@@ -96,7 +132,12 @@ export const Mutations = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(UUIDType) },
         dto: { type: new GraphQLNonNull(ChangePostInput) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.post.update({
+          where: { id: args.id },
+          data: args.dto,
+        });
+      },
     },
     changeProfile: {
       type: new GraphQLNonNull(Profile),
@@ -104,7 +145,12 @@ export const Mutations = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(UUIDType) },
         dto: { type: new GraphQLNonNull(ChangeProfileInput) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.profile.update({
+          where: { id: args.id },
+          data: args.dto,
+        });
+      },
     },
     changeUser: {
       type: new GraphQLNonNull(User),
@@ -112,28 +158,48 @@ export const Mutations = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(UUIDType) },
         dto: { type: new GraphQLNonNull(ChangeUserInput) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        return context.prisma.user.update({
+          where: { id: args.id },
+          data: args.dto,
+        });
+      },
     },
     deleteUser: {
       type: new GraphQLNonNull(GraphQLString),
       args: {
         id: { type: new GraphQLNonNull(UUIDType) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        await context.prisma.user.delete({
+          where: { id: args.id },
+        });
+        return 'User deleted successfully';
+      },
     },
     deletePost: {
       type: new GraphQLNonNull(GraphQLString),
       args: {
         id: { type: new GraphQLNonNull(UUIDType) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        await context.prisma.post.delete({
+          where: { id: args.id },
+        });
+        return 'Post deleted successfully';
+      },
     },
     deleteProfile: {
       type: new GraphQLNonNull(GraphQLString),
       args: {
         id: { type: new GraphQLNonNull(UUIDType) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        await context.prisma.profile.delete({
+          where: { id: args.id },
+        });
+        return 'Profile deleted successfully';
+      },
     },
     subscribeTo: {
       type: new GraphQLNonNull(GraphQLString),
@@ -141,7 +207,15 @@ export const Mutations = new GraphQLObjectType({
         userId: { type: new GraphQLNonNull(UUIDType) },
         authorId: { type: new GraphQLNonNull(UUIDType) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        await context.prisma.subscribersOnAuthors.create({
+          data: {
+            subscriberId: args.userId,
+            authorId: args.authorId,
+          },
+        });
+        return 'Subscription created successfully';
+      },
     },
     unsubscribeFrom: {
       type: new GraphQLNonNull(GraphQLString),
@@ -149,7 +223,17 @@ export const Mutations = new GraphQLObjectType({
         userId: { type: new GraphQLNonNull(UUIDType) },
         authorId: { type: new GraphQLNonNull(UUIDType) },
       },
-      // Resolver będzie dodany w etapie 2
+      resolve: async (parent, args, context) => {
+        await context.prisma.subscribersOnAuthors.delete({
+          where: {
+            subscriberId_authorId: {
+              subscriberId: args.userId,
+              authorId: args.authorId,
+            },
+          },
+        });
+        return 'Unsubscribed successfully';
+      },
     },
   },
 });
