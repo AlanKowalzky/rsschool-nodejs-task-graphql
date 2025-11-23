@@ -3,6 +3,7 @@ import { createGqlResponseSchema, gqlResponseSchema } from './schemas.js';
 import { graphql, GraphQLSchema } from 'graphql';
 import { RootQueryType, Mutations } from './resolvers.js';
 import { UUIDType } from './types/uuid.js';
+import depthLimit from 'graphql-depth-limit';
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   const { prisma } = fastify;
@@ -27,13 +28,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const { query, variables } = req.body;
       const context = { prisma };
       
-      // Podstawowa implementacja - resolvers będą dodane w etapie 2
       return graphql({
         schema,
         source: query,
         variableValues: variables,
         contextValue: context,
-      });
+        validationRules: [depthLimit(5)],
+      } as any);
     },
   });
 };
