@@ -48,9 +48,7 @@ export const Profile = new GraphQLObjectType({
     memberType: {
       type: new GraphQLNonNull(MemberType),
       resolve: async (parent, args, context) => {
-        return context.prisma.memberType.findUnique({
-          where: { id: parent.memberTypeId },
-        });
+        return context.loaders.memberTypeLoader.load(parent.memberTypeId);
       },
     },
   }),
@@ -65,37 +63,25 @@ export const User = new GraphQLObjectType({
     profile: {
       type: Profile,
       resolve: async (parent, args, context) => {
-        return context.prisma.profile.findUnique({
-          where: { userId: parent.id },
-        });
+        return context.loaders.profileByUserIdLoader.load(parent.id);
       },
     },
     posts: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Post))),
       resolve: async (parent, args, context) => {
-        return context.prisma.post.findMany({
-          where: { authorId: parent.id },
-        });
+        return context.loaders.postsByAuthorLoader.load(parent.id);
       },
     },
     userSubscribedTo: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(User))),
       resolve: async (parent, args, context) => {
-        const subscriptions = await context.prisma.subscribersOnAuthors.findMany({
-          where: { subscriberId: parent.id },
-          include: { author: true },
-        });
-        return subscriptions.map(sub => sub.author);
+        return context.loaders.subscriptionsLoader.load(parent.id);
       },
     },
     subscribedToUser: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(User))),
       resolve: async (parent, args, context) => {
-        const subscribers = await context.prisma.subscribersOnAuthors.findMany({
-          where: { authorId: parent.id },
-          include: { subscriber: true },
-        });
-        return subscribers.map(sub => sub.subscriber);
+        return context.loaders.subscribersLoader.load(parent.id);
       },
     },
   }),
